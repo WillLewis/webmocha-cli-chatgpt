@@ -1,0 +1,27 @@
+{
+  "name": "webmocha-ai",
+  "version": "1.0.0",
+  "description": "WebMocha-AI is a drop dead simple utility module for integrating your terminal with chatgpt.  ",
+  "main": "index.js",
+  "bin": {
+    "webmocha-ai": "./index.js"
+  },
+  "dependencies": {
+    "openai": "^3.2.1"
+  },
+  "scripts": {
+    "test": "wm-ai-help"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WillLewis/webmocha-cli-chatgpt"
+  },
+  "keywords": [
+    "chatgpt",
+    "openai",
+    "cli",
+    "webmocha"
+  ],
+  "author": "webmocha",
+  "license": "ISC"
+}
