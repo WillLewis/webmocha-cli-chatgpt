@@ -4,7 +4,7 @@
   "description": "WebMocha-AI is a drop dead simple utility module for integrating your terminal with chatgpt.  ",
   "main": "index.js",
   "bin": {
-    "ai": "./wrapper.sh"
+    "ai": "./index.js"
   },
   "dependencies": {
     "openai": "^3.2.1"

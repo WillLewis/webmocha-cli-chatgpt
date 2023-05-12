@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 require('dotenv').config();
 const readline = require('readline');
 const { Configuration, OpenAIApi } = require('openai');
@@ -9,8 +11,28 @@ const fs = require('fs');
 const HISTORY_FILE = '/tmp/command_history.txt';
 
 
+
+
+// child process to run terminal commands
+const { exec } = require('child_process');
+
+function runCommand(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.warn(error);
+      }
+      resolve(stdout ? stdout : stderr);
+    });
+  });
+}
+
+function appendToHistory(command, response) {
+  fs.appendFileSync(HISTORY_FILE, `Command: ${command}\nResponse:\n${response}\n----------\n`);
+}
+
 // Read command/response pairs from a file
-function readLastNPairs(filePath, numPairs) {
+function readLastNPairs(filePath, numPairs = 1) {
   const lines = fs.readFileSync(filePath, 'utf8').split('\n');
   let pairs = [];
   let command = '';
@@ -46,8 +68,6 @@ function readLastNPairs(filePath, numPairs) {
   return pairs.slice(-numPairs);
 }
 
-
-
 async function chatGPTRequest(messages) {
   try {
     const response = await openai.createChatCompletion({
@@ -58,31 +78,32 @@ async function chatGPTRequest(messages) {
       stop: null, 
       temperature: 0.5,
     });
-    console.log(response);
     console.log(response.data.choices[0].message.content);
   } catch (error) {
     console.error('Error:', error);
   }
 }
+  
+// Get the command and question from the arguments
+const commandQuestion = process.argv[2] || '';
+const numPairs = process.argv[3] || 1;
+if (commandQuestion.includes('|ai|')) {
+  const [command, question] = commandQuestion.split('|ai|');
+  runCommand(command).then((response) => {
+    appendToHistory(command, response);
+    askQuestion(question, numPairs);
+  });
+} else {
+  askQuestion(commandQuestion, numPairs);
+}
 
   
-// Get the number of command/response pairs from the arguments
-const numPairs = process.argv[2] || 1;
-
-  
-// Create readline interface
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-  
-// Prompt formation
-rl.question('Type your question for ChatGPT: ', (input) => {
+function askQuestion(input, numPairs = 1) {
   if (input.trim()) {
     const lastNPairs = readLastNPairs(HISTORY_FILE, numPairs);
-    
-    let messages = [{role: 'system', content: 'You are a helpful assistant that provides information about terminal commands and how to debug terminal errors. The user will provide a command and the response it yielded, then ask a question about it.'}];
+    let messages = [
+      {role: 'system', content: 'You are a helpful assistant that provides information about terminal commands and how to debug terminal errors. The user will provide a command and the response it yielded, then ask a question about it.'}
+    ];
     // Add each command-response pair as its own user-assistant message pair
     lastNPairs.forEach(pair => {
       messages.push({role: 'user', content: `Command: ${pair.command}`});
@@ -94,8 +115,7 @@ rl.question('Type your question for ChatGPT: ', (input) => {
   } else {
     console.log('Invalid input. Please type a question for ChatGPT.');
   }
-  rl.close();
-});
+}
 
 
 

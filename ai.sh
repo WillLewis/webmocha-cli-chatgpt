@@ -17,14 +17,6 @@ fi
 if [[ "$1" == "chat" ]]; then
   node index.js "$history_entries"
 else
-  # Check for the #chat# keyword
-  for arg in "$@"; do
-    if [[ "$arg" == "#chat#" ]]; then
-      chat=true
-      break
-    fi
-  done
-
   # Check if the command includes '|chat|' or '|'
   if [[ $* == *"|"* ]]; then
     # Split the command into the part before '|chat|' or '|' and the part after
